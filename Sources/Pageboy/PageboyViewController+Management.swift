@@ -129,22 +129,34 @@ internal extension PageboyViewController {
             guard let hasSelf = self else {
                 return
             }
-            pageViewController.setViewControllers(viewControllers,
-                                                  direction: direction.layoutNormalized(isRtL: hasSelf.view.layoutIsRightToLeft).rawValue,
-                                                  animated: animateUpdate,
-                                                  completion: { [weak self, animated, isUsingCustomTransition, completion] (finished) in
 
-                                                        guard let hasSelf = self else {
-                                                            return
-                                                        }
-                                                        hasSelf.isUpdatingViewControllers = false
+			pageViewController.setViewControllers(viewControllers,
+												  direction: direction.layoutNormalized(isRtL: hasSelf.view.layoutIsRightToLeft).rawValue,
+												  animated: animateUpdate,
+												  completion: { [weak self, animated, isUsingCustomTransition, completion] (finished) in
 
-                                                        if !animated || !isUsingCustomTransition {
-                                                            completion?(finished)
-                                                        }
-                                                  })
-        }
-        
+													guard let self = self else {
+														return
+													}
+
+													self.isUpdatingViewControllers = false
+													if finished {
+														DispatchQueue.main.async {
+															pageViewController
+																.setViewControllers(viewControllers,
+																					direction: direction.layoutNormalized(isRtL: self.view.layoutIsRightToLeft).rawValue,
+																					animated: false,
+																					completion: { _ in
+																						if !animated || !isUsingCustomTransition {
+																							completion?(finished)
+																						}
+																})
+														}
+
+													}
+			})
+		}
+
         // Attempt to fix issue where fast scrolling causes crash.
         // See https://github.com/uias/Pageboy/issues/140
         if async {
